@@ -1,8 +1,13 @@
+### Import Flash and jsonify ###
 from flask import Flask, jsonify
 
+### Create dictionaries ###
+precipitation = []
 
+### Set up Flask ###
 app = Flask(__name__)
 
+### Flask Routes ###
 @app.route("/")
 def home():
     return(
@@ -15,3 +20,7 @@ def home():
     )
 
 @app.route("/api/v1.0/precipitation")
+def precipitation():
+    """Return precipitation data as json"""
+
+    return jsonify(precipitation)
