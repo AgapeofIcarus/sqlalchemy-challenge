@@ -73,6 +73,8 @@ def precipitation():
         stns["name"] = name
         stations.append(stns)
 
+    return jsonify(stations)
+
 @app.route("/api/v1.0/tobs")
     temps = session.query(measurement.tobs).\
     filter(measurement.date <= '2017-08-23').\
@@ -90,16 +92,50 @@ def precipitation():
         temp["tobs"] = tobs
         temperatures.append(temp)
 
+    return jsonify(temperatures)
+
 @app.route("/api/v1.0/<start>")
-    TAVG = session.query(func.avg(measurement.tobs)).all()
-    TMIN = session.query(func.max(measurement.tobs)).all()
-    TMAX = session.query(func.min(measurement.tobs)).all()
+    start_results = session.query(func.avg(measurement.tobs)).\
+    func.max(measurement.tobs)).\
+    func.min(measurement.tobs)).\
+    filter(measurement.date >= start).\
+    group_by(measurement.date).all()
 
-    start = []
+    session.close()
 
-    for date in start:
-        
+    #create dictionary from the query
+    start_date = []
 
+    for date, min, avg, max in start_results:
+        start= {}
+        start["date"] = date
+        start["avg"] = avg
+        start["min"] = min
+        start["max"] = max
+        start_date.append(start)
+
+    return jsonify(start_date)
+
+@app.route("/api/v1.0/<start>/<end>")
+    start_end_results = session.query(func.avg(measurement.tobs)).\
+    func.max(measurement.tobs)).\
+    func.min(measurement.tobs)).\
+    filter(measurement.date >= start).\
+    filter(measurement.date <= end).\
+    group_by(measurement.date).all()
+
+    #create dictionary from the query
+    start_end_dates = []
+
+    for date, min, avg, max in start_end_results:
+        start_end= {}
+        start_end["date"] = data
+        start_end["avg"] = avg
+        start_end["min"] = min
+        start_end["max"] = max
+        start_end_dates.append(start_end)
+
+    return jsonify(start_end_dates)
 
 
 if __name__ == "__main__":
