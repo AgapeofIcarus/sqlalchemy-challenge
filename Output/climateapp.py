@@ -91,6 +91,14 @@ def precipitation():
         temperatures.append(temp)
 
 @app.route("/api/v1.0/<start>")
+    TAVG = session.query(func.avg(measurement.tobs)).all()
+    TMIN = session.query(func.max(measurement.tobs)).all()
+    TMAX = session.query(func.min(measurement.tobs)).all()
+
+    start = []
+
+    for date in start:
+        
 
 
 
