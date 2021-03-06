@@ -8,14 +8,14 @@ from sqlalchemy import create_engine, func
 from flask import Flask, jsonify
 
 ### Set up Database connection ###
-engine = create_engine("sqlite:///hawaii.sqlite")
+engine = create_engine("sqlite:///Source_Data/hawaii.sqlite")
 
 # reflect an existing database into a new model
 Base = automap_base()
 # reflect the tables
 Base.prepare(engine, reflect=True)
 
-# Save reference to the tables
+# define classes
 Measurement = Base.classes.measurement
 Station = Base.classes.station
 
@@ -30,23 +30,22 @@ def home():
         f"Precipitation: /api/v1.0/precipitation<br/>"
         f"Stations: /api/v1.0/stations<br/>"
         f"Temperatures: /api/v1.0/tobs<br/>"
-        f"Start Date: /api/v1.0/<start><br/>"
-        f"Start and End Dates: /api/v1.0/<start>/<end><br/>"
+        f"Start Date: /api/v1.0/start<br/>"
+        f"Start and End Dates: /api/v1.0/start_end<br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
      # Create our session (link) from Python to the DB
     session = Session(engine)
-
-    #Query prcp data.
+     #Query prcp data.
     results = session.query(Measurement.date, Measurement.prcp).\
     filter(Measurement.date <= '2017-08-23').\
     filter(Measurement.date >= '2016-08-23').\
     order_by(Measurement.date.desc()).all()
 
     session.close()
-    
+   
     #Create dictionary from the query
     precipitation = []
 
@@ -101,7 +100,7 @@ def tobs():
 
     return jsonify(temperatures)
 
-@app.route("/api/v1.0/<start>")
+@app.route("/api/v1.0/start")
 def start(start):
     # Create our session (link) from Python to the DB
     session = Session(engine)
@@ -124,7 +123,7 @@ def start(start):
 
     return jsonify(start_date)
 
-@app.route("/api/v1.0/<start>/<end>")
+@app.route("/api/v1.0/start_end")
 def start_end(start, stop):
     # Create our session (link) from Python to the DB
     session = Session(engine)
