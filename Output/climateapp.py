@@ -1,9 +1,8 @@
 ### Do imports ###
 import numpy as np
-
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import session
+from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 
 from flask import Flask, jsonify
@@ -17,8 +16,8 @@ Base = automap_base()
 Base.prepare(engine, reflect=True)
 
 # Save reference to the tables
-measurement = Base.classes.measurement
-station = Base.classes.station
+Measurement = Base.classes.measurement
+Station = Base.classes.station
 
 ### Set up Flask ###
 app = Flask(__name__)
@@ -28,11 +27,11 @@ app = Flask(__name__)
 def home():
     return(
      f"Available Routes:<br/>"
-        f"/api/v1.0/precipitation<br/>"
-        f"/api/v1.0/stations<br/>"
-        f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/<start>/<end><br/>"
+        f"Precipitation: /api/v1.0/precipitation<br/>"
+        f"Stations: /api/v1.0/stations<br/>"
+        f"Temperatures: /api/v1.0/tobs<br/>"
+        f"Start Date: /api/v1.0/<start><br/>"
+        f"Start and End Dates: /api/v1.0/<start>/<end><br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -41,10 +40,10 @@ def precipitation():
     session = Session(engine)
 
     #Query prcp data.
-    results = session.query(measurement.date, measurement.prcp).\
-    filter(measurement.date <= '2017-08-23').\
-    filter(measurement.date >= '2016-08-23').\
-    order_by(measurement.date.desc()
+    results = session.query(Measurement.date, Measurement.prcp).\
+    filter(Measurement.date <= '2017-08-23').\
+    filter(Measurement.date >= '2016-08-23').\
+    order_by(Measurement.date.desc()).all()
 
     session.close()
     
@@ -60,7 +59,11 @@ def precipitation():
     return jsonify(precipitation)
 
 @app.route("/api/v1.0/stations")
-    station_results = session.query(station.station, station.name).all()
+def stations():
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    station_results = session.query(Station.station, Station.name).all()
 
     session.close()
 
@@ -76,17 +79,21 @@ def precipitation():
     return jsonify(stations)
 
 @app.route("/api/v1.0/tobs")
-    temps = session.query(measurement.tobs).\
-    filter(measurement.date <= '2017-08-23').\
-    filter(measurement.date >= '2016-08-23').\
-    filter(measurement.station == 'USC00519281').all()
+def tobs():
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    temps = session.query(Measurement.tobs).\
+    filter(Measurement.date <= '2017-08-23').\
+    filter(Measurement.date >= '2016-08-23').\
+    filter(Measurement.station == 'USC00519281').all()
 
     session.close()
 
     #create dictionary from the query
     temperatures = []
 
-    for tobs in temps:
+    for tobs, date in temps:
         temp= {}
         temp["date"] = date
         temp["tobs"] = tobs
@@ -95,11 +102,12 @@ def precipitation():
     return jsonify(temperatures)
 
 @app.route("/api/v1.0/<start>")
-    start_results = session.query(func.avg(measurement.tobs)).\
-    func.max(measurement.tobs)).\
-    func.min(measurement.tobs)).\
-    filter(measurement.date >= start).\
-    group_by(measurement.date).all()
+def start(start):
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    start_results = session.query(func.avg(Measurement.tobs), func.max(Measurement.tobs), func.min(Measurement.tobs)).\
+    filter(Measurement.date >= start).all()
 
     session.close()
 
@@ -117,19 +125,21 @@ def precipitation():
     return jsonify(start_date)
 
 @app.route("/api/v1.0/<start>/<end>")
-    start_end_results = session.query(func.avg(measurement.tobs)).\
-    func.max(measurement.tobs)).\
-    func.min(measurement.tobs)).\
-    filter(measurement.date >= start).\
-    filter(measurement.date <= end).\
-    group_by(measurement.date).all()
+def start_end(start, stop):
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    start_end_results = session.query(func.avg(Measurement.tobs), func.max(Measurement.tobs), func.min(Measurement.tobs)).\
+    filter(Measurement.date >= start).all()
+
+    session.close()
 
     #create dictionary from the query
     start_end_dates = []
 
     for date, min, avg, max in start_end_results:
         start_end= {}
-        start_end["date"] = data
+        start_end["date"] = date
         start_end["avg"] = avg
         start_end["min"] = min
         start_end["max"] = max
