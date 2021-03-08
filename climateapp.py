@@ -128,7 +128,7 @@ def start_end(start, stop):
     session = Session(engine)
 
     start_end_results = session.query(func.avg(Measurement.tobs), func.max(Measurement.tobs), func.min(Measurement.tobs)).\
-    filter(Measurement.date >= start).filter(Measurement.date <= stop)all()
+    filter(Measurement.date >= start).filter(Measurement.date <= stop).all()
 
     session.close()
 
