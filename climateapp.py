@@ -113,9 +113,8 @@ def start(start):
     #create dictionary from the query
     start_date = []
 
-    for date, min, avg, max in start_results:
+    for min, avg, max in start_results:
         start= {}
-        start["date"] = date
         start["avg"] = avg
         start["min"] = min
         start["max"] = max
