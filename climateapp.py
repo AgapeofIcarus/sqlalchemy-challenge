@@ -1,6 +1,7 @@
 ### Do imports ###
 import numpy as np
 import sqlalchemy
+import datetime as dt
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
@@ -82,17 +83,17 @@ def tobs():
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
-    temps = session.query(Measurement.tobs).\
-    filter(Measurement.date <= '2017-08-23').\
-    filter(Measurement.date >= '2016-08-23').\
-    filter(Measurement.station == 'USC00519281').all()
+    temps = session.query(Measurement.date).order_by(Measurement.date.desc()).first()[0]
+    dates = dt.datetime.strptime(temps, '%Y-%m-%d')
+    date_query= dt.date(dates.year -1, dates.month, dates.day)
+    search = session.query(Measurement.tobs, Measurement.date).filter(Measurement.date >= date_query).all()
 
     session.close()
 
     #create dictionary from the query
     temperatures = []
 
-    for tobs, date in temps:
+    for tobs, date in search:
         temp= {}
         temp["date"] = date
         temp["tobs"] = tobs
@@ -100,8 +101,8 @@ def tobs():
 
     return jsonify(temperatures)
 
-@app.route("/api/v1.0/start")
-def start(start):
+@app.route("/api/v1.0/start_date")
+def start_date(start):
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
